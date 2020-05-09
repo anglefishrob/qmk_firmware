@@ -1,11 +1,17 @@
+// Maclike by Robert Quinn
+//
 // Maclike is a keymap that emulates the muscle memory and shortcuts from macOS in Windows.
 //
 // The modifiers on a Mac are | Ctrl | Alt | Cmd |
+//
 // On the Windows layer, Cmd becomes (right) Ctrl as well. 
+//
 // Some special cases are:
 //     Task Switcher: Cmd + Tab emulates Alt + Tab
 //     Home/End: Cmd + Left/Right does Home/End, which Windows does not have a shortcut for already
 //     Move cursor by word: Alt + Left/Right emulates Ctrl + Left/Right
+//
+// Maclike also intentionally disables tapping Alt to focus the menu bar in Windows.
 
 #include QMK_KEYBOARD_H
 
@@ -22,6 +28,7 @@
 // This prevents the Alt tap behavior when using arrow keys as well as all over Windows which is nice
 #define BLANK X_F17
 
+static bool wintaskswitcheropen = false;
 static bool wincmdpressed = false;
 static bool winaltpressed = false;
 
@@ -43,6 +50,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       else {
         wincmdpressed = false;
         unregister_code(KC_RCTL);
+
+        if(wintaskswitcheropen == true){
+          // Release the task switcher
+          unregister_code(KC_LALT);
+          wintaskswitcheropen = false;
+        }
       }
       break;
 
@@ -61,15 +74,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     case WINTAB:
       if(record -> event.pressed){
         if(wincmdpressed == true){
-          // Send a single Alt+Tab instead of Ctrl+Tab
+          // Swap Ctrl for Alt
           unregister_code(KC_RCTL);
-          SEND_STRING(SS_LALT(SS_TAP(X_TAB)));
-          register_code(KC_RCTL);
+          register_code(KC_LALT);
+          wintaskswitcheropen = true;
         }
-        else{
-          // Regular Tab
-          register_code(KC_TAB);
-        }
+
+        // Tab in all cases
+        register_code(KC_TAB);
       }
       else{
         unregister_code(KC_TAB);
@@ -177,11 +189,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
    * ,-----------------------------------------------------------------------------------------.
    * |  `  | F1  | F2  | F3  | F4  | F5  | F6  | F7  | F8  | F9  | F10 | F11 | F12 |    Del    |
    * |-----------------------------------------------------------------------------------------+
-   * |        |     | Windows|     |Reset|     |     |     |     |     |   |Screen B+|Screen B-|
+   * |        |     | Windows|     |Reset|     |     |   |   |   |   |Screen B+|Screen B-|     |
    * |-----------------------------------------------------------------------------------------+
-   * |   [v]   |Apple|Sat+ |Effect+|Mode+|Bright+|Hue+ | Prev |Play |Next |     |     |        |
+   * |   [v]   |Apple|Sat+ |Effect+|Mode+|Bright+| Hue+ | Prev |Play |Next |     |     |       |
    * |-----------------------------------------------------------------------------------------+
-   * |   Shift   |   |Sat-|Effect-|Mode-|Bright-|Hue- |Mute |Vol- | Vol+ |     |               |
+   * |   Shift   |    | Sat-|Effect-|Mode-|Bright-| Hue- |Mute |Vol- | Vol+ |     |            |
    * |-----------------------------------------------------------------------------------------+
    * | Ctrl  |  Alt   | Cmd  |                                 |       |       |       |       |
    * `-----------------------------------------------------------------------------------------'
