@@ -1,19 +1,12 @@
-/* Copyright 2018 MechMerlin
- * Copyright 2018 Logan Huskins
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+// Maclike is a keymap that emulates the muscle memory and shortcuts from macOS in Windows.
+//
+// The modifiers on a Mac are | Ctrl | Alt | Cmd |
+// On the Windows layer, Cmd becomes (right) Ctrl as well. 
+// Some special cases are:
+//     Task Switcher: Cmd + Tab emulates Alt + Tab
+//     Home/End: Cmd + Left/Right does Home/End, which Windows does not have a shortcut for already
+//     Move cursor by word: Alt + Left/Right emulates Ctrl + Left/Right
+
 #include QMK_KEYBOARD_H
 
 #define MAC_LAYER 0
@@ -21,6 +14,13 @@
 #define FN_LAYER 2
 
 #define ESC_FN LT(2,KC_ESC)
+
+// In most apps on Windows, tapping Alt focuses the menu bar
+// Using the WinAlt and WinLeft/WinRight buttons logically sends an Alt tap
+// Which causes every other "move cursor by word" to focus the menu bar instead
+// Every time we register Alt, send a 'blank' keycode which is used for literally nothing
+// This prevents the Alt tap behavior when using arrow keys as well as all over Windows which is nice
+#define BLANK X_F17
 
 static bool wincmdpressed = false;
 static bool winaltpressed = false;
@@ -50,6 +50,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       if (record -> event.pressed) {
         winaltpressed = true;
         register_code(KC_LALT);
+        SEND_STRING(SS_TAP(BLANK));
       } 
       else {
         winaltpressed = false;
@@ -88,6 +89,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
           unregister_code(KC_LALT);
           SEND_STRING(SS_RCTL(SS_TAP(X_LEFT)));
           register_code(KC_LALT);
+          SEND_STRING(SS_TAP(BLANK));
         }
         else{
           // Regular Arrow
@@ -112,6 +114,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
           unregister_code(KC_LALT);
           SEND_STRING(SS_RCTL(SS_TAP(X_RIGHT)));
           register_code(KC_LALT);
+          SEND_STRING(SS_TAP(BLANK));
         }
         else{
           // Regular Arrow
