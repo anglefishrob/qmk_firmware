@@ -23,56 +23,108 @@
 #define ESC_FN LT(2,KC_ESC)
 
 static bool wincmdpressed = false;
+static bool winaltpressed = false;
 
 enum custom_keycodes {
   WINCMD = (SAFE_RANGE),
-  WINTAB
+  WINALT,
+  WINTAB,
+  WINLEFT,
+  WINRIGHT
 };
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    switch (keycode) {
-      case WINCMD:
-        if (record -> event.pressed) {
-            // when keycode WINCMD is pressed
-            wincmdpressed = true;
+  switch (keycode) {
+    case WINCMD:
+      if (record -> event.pressed) {
+        wincmdpressed = true;
+        register_code(KC_RCTL);
+      } 
+      else {
+        wincmdpressed = false;
+        unregister_code(KC_RCTL);
+      }
+      break;
 
-          // register right control
-            register_code(KC_RCTL);
-        } 
-        else {
-            // when keycode WINCMD is released
-            wincmdpressed = false;
+    case WINALT:
+      if (record -> event.pressed) {
+        winaltpressed = true;
+        register_code(KC_LALT);
+      } 
+      else {
+        winaltpressed = false;
+        unregister_code(KC_LALT);
+      }
+      break;
 
-          // unregister right control
-            unregister_code(KC_RCTL);
-        }
-        break;
-
-      case WINTAB:
-        if(record -> event.pressed){
+    case WINTAB:
+      if(record -> event.pressed){
         if(wincmdpressed == true){
-
-            unregister_code(KC_RCTL);
-
-            SEND_STRING(SS_LALT(SS_TAP(X_TAB)));
-
-              register_code(KC_RCTL);
-          }
-          else{
-            register_code(KC_TAB);
-          }
+          // Send a single Alt+Tab instead of Ctrl+Tab
+          unregister_code(KC_RCTL);
+          SEND_STRING(SS_LALT(SS_TAP(X_TAB)));
+          register_code(KC_RCTL);
         }
         else{
-          unregister_code(KC_TAB);
+          // Regular Tab
+          register_code(KC_TAB);
         }
-          break;
-    }
+      }
+      else{
+        unregister_code(KC_TAB);
+      }
+      break;
+
+    case WINLEFT:
+      if(record -> event.pressed){
+        if(wincmdpressed == true && winaltpressed == false){
+          // Send a single Home instead of Ctrl+Arrow
+          unregister_code(KC_RCTL);
+          SEND_STRING(SS_TAP(X_HOME));
+          register_code(KC_RCTL);
+        }
+        else if(winaltpressed == true && wincmdpressed == false){
+          // Send a single Ctrl+Arrow instead of Alt+Arrow
+          unregister_code(KC_LALT);
+          SEND_STRING(SS_RCTL(SS_TAP(X_LEFT)));
+          register_code(KC_LALT);
+        }
+        else{
+          // Regular Arrow
+          register_code(KC_LEFT);
+        }
+      }
+      else{
+        unregister_code(KC_LEFT);
+      }
+      break;
+
+    case WINRIGHT:
+      if(record -> event.pressed){
+        if(wincmdpressed == true && winaltpressed == false){
+          // Send a single End instead of Ctrl+Arrow
+          unregister_code(KC_RCTL);
+          SEND_STRING(SS_TAP(X_END));
+          register_code(KC_RCTL);
+        }
+        else if(winaltpressed == true && wincmdpressed == false){
+          // Send a single Ctrl+Arrow instead of Alt+Arrow
+          unregister_code(KC_LALT);
+          SEND_STRING(SS_RCTL(SS_TAP(X_RIGHT)));
+          register_code(KC_LALT);
+        }
+        else{
+          // Regular Arrow
+          register_code(KC_RIGHT);
+        }
+      }
+      else{
+        unregister_code(KC_RIGHT);
+      }
+      break;
+  }
   return true;
 };
-
-
-
-
 
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -107,7 +159,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
    * |-----------------------------------------------------------------------------------------+
    * |    [v]    | [v] | [v] | [v] | [v] | [v] | [v] | [v] | [v] | [v] | [v] |      [v]        |
    * |-----------------------------------------------------------------------------------------+
-   * | [v]   |  [v]  | WinCmd |              [v]               |  [v]  |  [v]   | [v]  |  [v]  |
+   * | [v]  | WinAlt | WinCmd |              [v]               |  [v]  |WinLeft| [v]  |WinRight|
    * `-----------------------------------------------------------------------------------------'
    */
   [WIN_LAYER] = LAYOUT_60_ansi(
@@ -115,7 +167,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     WINTAB, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
     _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
     _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
-    _______, _______, WINCMD, _______, _______, _______, _______, _______
+    _______, WINALT, WINCMD, _______, _______, WINLEFT, _______, WINRIGHT
   ),
 
   /* Function
