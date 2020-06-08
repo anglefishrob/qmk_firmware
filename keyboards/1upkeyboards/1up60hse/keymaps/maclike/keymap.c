@@ -191,18 +191,18 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
    * |-----------------------------------------------------------------------------------------+
    * |        |     | Windows|     |Reset|     |     |   |   |   |   |Screen B+|Screen B-|     |
    * |-----------------------------------------------------------------------------------------+
-   * |   [v]   |Apple|Sat+ |Effect+|Mode+|Bright+| Hue+ | Prev |Play |Next |     |     |       |
+   * |   [v]   |Apple|Sat+ |Effect+|Mode+|Bright+| Hue+ | Prev |Play |Next |    | scroll D|    |
    * |-----------------------------------------------------------------------------------------+
-   * |   Shift   |    | Sat-|Effect-|Mode-|Bright-| Hue- |Mute |Vol- | Vol+ |     |            |
+   * |   Shift   |    | Sat-|Effect-|Mode-|Bright-| Hue- |Mute |Vol- | Vol+ |scroll U| mouse Up|
    * |-----------------------------------------------------------------------------------------+
-   * | Ctrl  |  Alt   | Cmd  |                                 |       |       |       |       |
+   * | Ctrl  |  Alt   | Cmd  |           mouse 1               |       |mouse L|mouse D|mouse R|
    * `-----------------------------------------------------------------------------------------'
    */
   [FN_LAYER] = LAYOUT_60_ansi(
     KC_GRV, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_F11, KC_F12, KC_DEL,
     XXXXXXX, XXXXXXX, TO(WIN_LAYER), XXXXXXX, RESET, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, KC_BRID, KC_BRIU, XXXXXXX,
-    _______, TO(MAC_LAYER), RGB_SAI, RGB_SPI, RGB_MOD, RGB_VAI, RGB_HUI, KC_MRWD, KC_MPLY, KC_MFFD, XXXXXXX, XXXXXXX, XXXXXXX,
-    KC_LSFT, XXXXXXX, RGB_SAD, RGB_SPD, RGB_RMOD, RGB_VAD, RGB_HUD, KC_MUTE, KC_VOLD, KC_VOLU, KC_PGDN, XXXXXXX,
-    KC_LCTL, KC_LALT, KC_LCMD, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX
+    _______, TO(MAC_LAYER), RGB_SAI, RGB_SPI, RGB_MOD, RGB_VAI, RGB_HUI, KC_MRWD, KC_MPLY, KC_MFFD, XXXXXXX, KC_WH_D, XXXXXXX,
+    KC_LSFT, XXXXXXX, RGB_SAD, RGB_SPD, RGB_RMOD, RGB_VAD, RGB_HUD, KC_MUTE, KC_VOLD, KC_VOLU, KC_WH_U, KC_MS_U,
+    KC_LCTL, KC_LALT, KC_LCMD, KC_BTN1, XXXXXXX, KC_MS_L, KC_MS_D, KC_MS_R
   ),
 };
