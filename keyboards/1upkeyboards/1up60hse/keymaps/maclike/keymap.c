@@ -21,8 +21,6 @@
 
 #define ESC_FN LT(2,KC_ESC)
 
-#define SINGLE_WIN OSM(MOD_LGUI) // Enable Win key for the next keypress
-
 // In most apps on Windows, tapping Alt focuses the menu bar
 // Using the WinAlt and WinLeft/WinRight buttons logically sends an Alt tap
 // Which causes every other "move cursor by word" to focus the menu bar instead
