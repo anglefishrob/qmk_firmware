@@ -33,13 +33,6 @@ enum planck_layers {
 #define RAISE1 MO(Fn1Layer)
 #define ESC_FN LT(FnLayer, KC_ESC)
 
-// In most apps on Windows, tapping Alt focuses the menu bar
-// Using the WinAlt and WinLeft/WinRight buttons logically sends an Alt tap
-// Which causes every other "move cursor by word" to focus the menu bar instead
-// Every time we register Alt, send a 'blank' keycode which is used for literally nothing
-// This prevents the Alt tap behavior when using arrow keys as well as all over Windows which is nice
-#define BLANK X_F17
-
 #define MACBRID KC_F14
 #define MACBRIU KC_F15
 
@@ -51,38 +44,67 @@ qk_tap_dance_action_t tap_dance_actions[] = {
 };
 #define COLQUOT TD(TD_COLQUOT)
 
+#define MAC_SOUND E__NOTE(_FS5), E__NOTE(_AS5), S__NOTE(_REST), Q__NOTE(_CS6), Q__NOTE(_FS6),
+//#define WIN_SOUND E__NOTE(_FS3), E__NOTE(_AS3), S__NOTE(_REST), Q__NOTE(_CS4), Q__NOTE(_FS4),
+float mac_song[][2] = SONG(MAC_SOUND);
+float win_song[][2] = SONG(QWERTY_SOUND);
+
+
+
+
+//=============================//
+//                             //
+//                             //
+//       Maclike funtions      //
+//                             //
+//                             //
+//=============================//
+
+// In most apps on Windows, tapping Alt focuses the menu bar
+// Using the WinAlt and WinLeft/WinRight buttons logically sends an Alt tap
+// Which causes every other "move cursor by word" to focus the menu bar instead
+// Every time we register Alt, send a 'blank' keycode which is used for literally nothing
+// This prevents the Alt tap behavior when using arrow keys as well as all over Windows which is nice
+#define BLANK X_F17
+
 static bool wintaskswitcheropen = false;
 static bool wincmdpressed = false;
 static bool winaltpressed = false;
 
 enum custom_keycodes {
   WINCMD = (SAFE_RANGE),
+  WINSPC,
   WINALT,
   WINTAB,
   WINLEFT,
   WINRIGHT,
   WINBKSP,
+  WINFNENT,
   TOWIN,
   TOMAC
 };
-
-float my_song[][2] = SONG(QWERTY_SOUND);
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   switch (keycode) {
     
     case TOWIN:
       if(record -> event.pressed){
+        #ifdef MAC_SOUND
         stop_all_notes();
-        PLAY_SONG(my_song);
+        PLAY_SONG(win_song);
+        #endif
+        
         layer_on(WinLayer);
       }
       break;
 
     case TOMAC:
       if(record -> event.pressed){
+        #ifdef MAC_SOUND
         stop_all_notes();
-        PLAY_SONG(my_song);
+        PLAY_SONG(mac_song);
+        #endif
+        
         layer_off(WinLayer);
       }
       break;
@@ -200,9 +222,59 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         unregister_code(KC_BSPC);
       }
       break;
+
+    case WINSPC:
+      if(record -> event.pressed){
+        if(wincmdpressed == true){
+          
+          // Cancel RCtrl from WINCMD, to use Ctrl here use the left one that is still available
+          unregister_code(KC_RCTL);
+
+          // Hold Win key instead. Tapping this key brings up the windows start menu, similar to spotlight search on mac.
+          SEND_STRING(SS_DOWN(X_LWIN));
+        }
+        else{
+          // Regular Space
+          register_code(KC_SPC);  
+        }
+      }
+      else{
+
+        // This should continue to work while space is held, so a Win+letter shortcut can be used without holding WINCTL
+        SEND_STRING(SS_UP(X_LWIN));
+
+        unregister_code(KC_SPC);
+      }
+      break;
+
+    case WINFNENT:
+      if(record -> event.pressed){
+        if(IS_LAYER_ON(WinLayer) && IS_LAYER_ON(FnLayer)){
+          // Send rename if Windows sends Fn Enter
+          SEND_STRING(SS_TAP(X_F2));
+        }
+        else{
+          // Regular Enter
+          register_code(KC_ENT);
+        }
+      }
+      else{
+        unregister_code(KC_ENT);
+      }
+      break;
   }
   return true;
 };
+
+
+
+//=============================//
+//                             //
+//                             //
+//           Key maps          //
+//                             //
+//                             //
+//=============================//
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
@@ -236,10 +308,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * `-----------------------------------------------------------------------------------'
  */
 [WinLayer] = LAYOUT_planck_grid(
-    _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, WINBKSP,
-     WINTAB, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
+     WINTAB, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, WINBKSP,
     _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
-    _______,  WINALT,  WINCMD, _______, _______, _______, _______, _______, _______, WINLEFT, _______, WINRIGHT
+    _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
+    _______,  WINALT,  WINCMD, _______, _______,  WINSPC,  WINSPC, _______, _______, WINLEFT, _______, WINRIGHT
 ),
 
 /* Numpad and Symbols
@@ -254,7 +326,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * `-----------------------------------------------------------------------------------'
  */
 [NumpadLayer] = LAYOUT_planck_grid(
-    KC_GRV,  KC_1,    KC_2,    KC_3,    KC_BSLS, KC_EXLM, KC_PIPE, KC_LPRN, KC_RPRN, KC_MINS, KC_PPLS, KC_PEQL,
+    KC_GRV,  KC_1,    KC_2,    KC_3,    KC_BSLS, KC_EXLM, KC_PIPE, KC_LPRN, KC_RPRN, KC_MINS, KC_PPLS, _______,
     _______, KC_4,    KC_5,    KC_6,    XXXXXXX, KC_QUES, KC_AMPR, KC_LCBR, KC_RCBR, KC_PSLS, KC_PAST, KC_PEQL,
     _______, KC_7,    KC_8,    KC_9,    KC_0,    XXXXXXX, XXXXXXX, KC_LBRC, KC_RBRC, _______, _______, _______,
     _______, _______, _______, _______, RAISE1,  _______, _______, RAISE1,  _______, _______, _______, _______
@@ -262,22 +334,23 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 /* Fn
  * ,-----------------------------------------------------------------------------------.
- * |  `   |  F1  |  F2  |  F3  | Reset|      |      |      |      |      |      | Del  |
+ * |  `   |  F1  |  F2  |  F3  | Reset|      |      |      |      |      |WheelD| Del  |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
- * | [v]  |  F4  |  F5  |  F6  |      |      |      | Prev | Play | Next |      |WheelD|
+ * | [v]  |  F4  |  F5  |  F6  |      |      |      | Prev | Play | Next |WheelU| Enter|
  * |------+------+------+------+------+------+------+------+------+------+------+------|
- * | [v]  |  F7  |  F8  |  F9  |      | ScBr-| ScBr+| Mute | Vol- | Vol+ |MouseU|WheelU|
+ * | [v]  |  F7  |  F8  |  F9  |      | ScBr-| ScBr+| Mute | Vol- | Vol+ |MouseU|      |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
  * | [v]  | [v]  | CMD  | [v]  | [v]  |   Mouse 1   | [v]  | [v]  |MouseL|MouseD|MouseR|
  * `-----------------------------------------------------------------------------------'
  */
 [FnLayer] = LAYOUT_planck_grid(
-    KC_GRV,  KC_F1,   KC_F2,   KC_F3,   RESET,   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, KC_DEL,
-    _______, KC_F4,   KC_F5,   KC_F6,   KC_F10,  KC_F11,  KC_F12,  KC_MRWD, KC_MPLY, KC_MFFD, XXXXXXX, KC_WH_D,
-    _______, KC_F7,   KC_F8,   KC_F9,   XXXXXXX, MACBRID, MACBRIU, KC_MUTE, KC_VOLD, KC_VOLU, KC_MS_U, KC_WH_U,
+    KC_GRV,  KC_F1,   KC_F2,   KC_F3,   RESET,   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, KC_WH_D, KC_DEL,
+    _______, KC_F4,   KC_F5,   KC_F6,   KC_F10,  KC_F11,  KC_F12,  KC_MRWD, KC_MPLY, KC_MFFD, KC_WH_U, WINFNENT,
+    _______, KC_F7,   KC_F8,   KC_F9,   XXXXXXX, MACBRID, MACBRIU, KC_MUTE, KC_VOLD, KC_VOLU, KC_MS_U, XXXXXXX,
     _______, _______, KC_LCMD, _______, _______, KC_BTN1, KC_BTN1, _______, _______, KC_MS_L, KC_MS_D, KC_MS_R
 ),
 
+// Keyboard functions
 [Fn1Layer] = LAYOUT_planck_grid(
     XXXXXXX, XXXXXXX,   TOWIN, XXXXXXX,   RESET, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
     XXXXXXX,   TOMAC, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,

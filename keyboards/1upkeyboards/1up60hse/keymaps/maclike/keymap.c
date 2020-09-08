@@ -13,13 +13,28 @@
 //
 // Maclike also intentionally disables tapping Alt to focus the menu bar in Windows.
 
+// Compile: qmk compile -kb 1upkeyboards/1up60hse -km maclike
+
 #include QMK_KEYBOARD_H
 
-#define MAC_LAYER 0
-#define WIN_LAYER 1
-#define FN_LAYER 2
+enum planck_layers {
+  DefaultLayer,
+  WinLayer,
+  FnLayer,
+};
 
 #define ESC_FN LT(2,KC_ESC)
+
+#define MACBRID KC_F14
+#define MACBRIU KC_F15
+
+//=============================//
+//                             //
+//                             //
+//       Maclike funtions      //
+//                             //
+//                             //
+//=============================//
 
 // In most apps on Windows, tapping Alt focuses the menu bar
 // Using the WinAlt and WinLeft/WinRight buttons logically sends an Alt tap
@@ -34,14 +49,42 @@ static bool winaltpressed = false;
 
 enum custom_keycodes {
   WINCMD = (SAFE_RANGE),
+  WINSPC,
   WINALT,
   WINTAB,
   WINLEFT,
-  WINRIGHT
+  WINRIGHT,
+  WINBKSP,
+  WINFNENT,
+  TOWIN,
+  TOMAC
 };
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   switch (keycode) {
+    
+    case TOWIN:
+      if(record -> event.pressed){
+        #ifdef MAC_SOUND
+        stop_all_notes();
+        PLAY_SONG(win_song);
+        #endif
+        
+        layer_on(WinLayer);
+      }
+      break;
+
+    case TOMAC:
+      if(record -> event.pressed){
+        #ifdef MAC_SOUND
+        stop_all_notes();
+        PLAY_SONG(mac_song);
+        #endif
+        
+        layer_off(WinLayer);
+      }
+      break;
+
     case WINCMD:
       if (record -> event.pressed) {
         wincmdpressed = true;
@@ -137,6 +180,64 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         unregister_code(KC_RIGHT);
       }
       break;
+
+    case WINBKSP:
+      if(record -> event.pressed){
+        if(wincmdpressed == true){
+          // Send a single Delete instead of Ctrl+Backspace
+          unregister_code(KC_RCTL);
+          SEND_STRING(SS_TAP(X_DEL));
+          register_code(KC_RCTL);
+        }
+        else{
+          // Regular Backspace
+          register_code(KC_BSPC);  
+        }
+      }
+      else{
+        unregister_code(KC_BSPC);
+      }
+      break;
+
+    case WINSPC:
+      if(record -> event.pressed){
+        if(wincmdpressed == true){
+          
+          // Cancel RCtrl from WINCMD, to use Ctrl here use the left one that is still available
+          unregister_code(KC_RCTL);
+
+          // Hold Win key instead. Tapping this key brings up the windows start menu, similar to spotlight search on mac.
+          SEND_STRING(SS_DOWN(X_LWIN));
+        }
+        else{
+          // Regular Space
+          register_code(KC_SPC);  
+        }
+      }
+      else{
+
+        // This should continue to work while space is held, so a Win+letter shortcut can be used without holding WINCTL
+        SEND_STRING(SS_UP(X_LWIN));
+
+        unregister_code(KC_SPC);
+      }
+      break;
+
+    case WINFNENT:
+      if(record -> event.pressed){
+        if(IS_LAYER_ON(WinLayer) && IS_LAYER_ON(FnLayer)){
+          // Send rename if Windows sends Fn Enter
+          SEND_STRING(SS_TAP(X_F2));
+        }
+        else{
+          // Regular Enter
+          register_code(KC_ENT);
+        }
+      }
+      else{
+        unregister_code(KC_ENT);
+      }
+      break;
   }
   return true;
 };
@@ -156,7 +257,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
    * | Ctrl  |  Alt  |  Cmd  |              Space              |  Cmd  |  Left  | Down | Right |
    * `-----------------------------------------------------------------------------------------'
    */
-  [MAC_LAYER] = LAYOUT_60_ansi(
+  [DefaultLayer] = LAYOUT_60_ansi(
     KC_ESC, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7, KC_8, KC_9, KC_0, KC_MINS, KC_EQL, KC_BSPC,
     KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_LBRC, KC_RBRC, KC_BSLS,
     ESC_FN, KC_A, KC_S, KC_D, KC_F, KC_G, KC_H, KC_J, KC_K, KC_L, KC_SCLN, KC_QUOT, KC_ENT,
@@ -177,19 +278,19 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
    * | [v]  | WinAlt | WinCmd |              [v]               |  [v]  |WinLeft| [v]  |WinRight|
    * `-----------------------------------------------------------------------------------------'
    */
-  [WIN_LAYER] = LAYOUT_60_ansi(
-    _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
+  [WinLayer] = LAYOUT_60_ansi(
+    _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, WINBKSP,
     WINTAB, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
     _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
     _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
-    _______, WINALT, WINCMD, _______, _______, WINLEFT, _______, WINRIGHT
+    _______, WINALT, WINCMD, WINSPC, _______, WINLEFT, _______, WINRIGHT
   ),
 
   /* Function
    * ,-----------------------------------------------------------------------------------------.
    * |  `  | F1  | F2  | F3  | F4  | F5  | F6  | F7  | F8  | F9  | F10 | F11 | F12 |    Del    |
    * |-----------------------------------------------------------------------------------------+
-   * |        |     | Windows|     |Reset|     |     |   |   |   |   |Screen B+|Screen B-|     |
+   * |        |     | Windows|     |Reset|     |     |   |   |   |   |Screen B+|Screen B-|WFEnt|
    * |-----------------------------------------------------------------------------------------+
    * |   [v]   |Apple|Sat+ |Effect+|Mode+|Bright+| Hue+ | Prev |Play |Next |    | scroll D|    |
    * |-----------------------------------------------------------------------------------------+
@@ -198,10 +299,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
    * | Ctrl  |  Alt   | Cmd  |           mouse 1               |       |mouse L|mouse D|mouse R|
    * `-----------------------------------------------------------------------------------------'
    */
-  [FN_LAYER] = LAYOUT_60_ansi(
+  [FnLayer] = LAYOUT_60_ansi(
     KC_GRV, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_F11, KC_F12, KC_DEL,
-    XXXXXXX, XXXXXXX, TO(WIN_LAYER), XXXXXXX, RESET, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, KC_BRID, KC_BRIU, XXXXXXX,
-    _______, TO(MAC_LAYER), RGB_SAI, RGB_SPI, RGB_MOD, RGB_VAI, RGB_HUI, KC_MRWD, KC_MPLY, KC_MFFD, XXXXXXX, KC_WH_D, XXXXXXX,
+    XXXXXXX, XXXXXXX, TOWIN, XXXXXXX, RESET, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, MACBRID, MACBRIU, XXXXXXX,
+    _______, TOMAC, RGB_SAI, RGB_SPI, RGB_MOD, RGB_VAI, RGB_HUI, KC_MRWD, KC_MPLY, KC_MFFD, XXXXXXX, KC_WH_D, WINFNENT,
     KC_LSFT, XXXXXXX, RGB_SAD, RGB_SPD, RGB_RMOD, RGB_VAD, RGB_HUD, KC_MUTE, KC_VOLD, KC_VOLU, KC_WH_U, KC_MS_U,
     KC_LCTL, KC_LALT, KC_LCMD, KC_BTN1, XXXXXXX, KC_MS_L, KC_MS_D, KC_MS_R
   ),

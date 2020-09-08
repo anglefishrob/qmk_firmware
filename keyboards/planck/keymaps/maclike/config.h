@@ -37,7 +37,10 @@
 // Most tactile encoders have detents every 4 stages
 #define ENCODER_RESOLUTION 4
 
+#define PERMISSIVE_HOLD
 
 #define TAPPING_TERM 200
 
 #define AUDIO_CLICKY
+
+#define DAC_SAMPLE_MAX 30000U//65535U
