@@ -1,4 +1,4 @@
-//#include QMK_KEYBOARD_H
+#include QMK_KEYBOARD_H
 #include "muse.h"
 #include "quantum.h"
 #include "maclike.h"
@@ -6,7 +6,6 @@
 
 enum planck_layers {
   DefaultLayer,
-  WinLayer,
   NumpadLayer,
   FnLayer,
   Fn1Layer,
@@ -78,7 +77,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 [FnLayer] = LAYOUT_preonic_grid(
     XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
     KC_GRV,  KC_F1,   KC_F2,   KC_F3,   KC_F12,  XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, KC_WH_D, KC_DEL,
-    _______, KC_F4,   KC_F5,   KC_F6,   KC_F11,  XXXXXXX, XXXXXXX, KC_MRWD, KC_MPLY, KC_MFFD, KC_WH_U, _______,
+    _______, KC_F4,   KC_F5,   KC_F6,   KC_F11,  XXXXXXX, XXXXXXX, KC_MRWD, KC_MPLY, KC_MFFD, KC_WH_U, FNENT,
     _______, KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_BRMD, KC_BRMU, KC_MUTE, KC_VOLD, KC_VOLU, KC_MS_U, _______,
     _______, _______, _______, _______, KC_BTN3, KC_BTN1, KC_BTN1, KC_BTN2, _______, KC_MS_L, KC_MS_D, KC_MS_R
 ),

@@ -3,12 +3,22 @@
 #include "quantum.h"
 #include "maclike.h"
 
-#define MACLIKE_WIN_LAYER 1
-
 #define MAC_SOUND E__NOTE(_FS5), E__NOTE(_AS5), S__NOTE(_REST), Q__NOTE(_CS6), Q__NOTE(_FS6),
 //#define WIN_SOUND E__NOTE(_FS3), E__NOTE(_AS3), S__NOTE(_REST), Q__NOTE(_CS4), Q__NOTE(_FS4),
 float mac_song[][2] = SONG(MAC_SOUND);
 float win_song[][2] = SONG(QWERTY_SOUND);
+
+// In most apps on Windows, tapping Alt focuses the menu bar
+// Using the WinAlt and WinLeft/WinRight buttons logically sends an Alt tap
+// Which causes every other "move cursor by word" to focus the menu bar instead
+// Every time we register Alt, send a 'blank' keycode which is used for literally nothing
+// This prevents the Alt tap behavior when using arrow keys as well as all over Windows which is nice
+#define BLANK X_F17
+
+bool winmodeactive = false;
+bool wintaskswitcheropen = false;
+bool wincmdpressed = false;
+bool winaltpressed = false;
 
 typedef union {
   uint32_t raw;
@@ -32,29 +42,36 @@ void set_windows_mode_pref(bool enabled){
   eeconfig_update_user(user_config.raw);
 }
 
-// In most apps on Windows, tapping Alt focuses the menu bar
-// Using the WinAlt and WinLeft/WinRight buttons logically sends an Alt tap
-// Which causes every other "move cursor by word" to focus the menu bar instead
-// Every time we register Alt, send a 'blank' keycode which is used for literally nothing
-// This prevents the Alt tap behavior when using arrow keys as well as all over Windows which is nice
-#define BLANK X_F17
+bool process_toggle_winmode(uint16_t keycode, bool pressed){
 
-bool winmodeactive = false;
-bool wintaskswitcheropen = false;
-bool wincmdpressed = false;
-bool winaltpressed = false;
+  if(keycode == TOWIN){
+    if(pressed){
+      #ifdef MAC_SOUND
+      stop_all_notes();
+      PLAY_SONG(win_song);
+      #endif
+      winmodeactive = true;
+      set_windows_mode_pref(winmodeactive);
+    }
+    return false;
+  }
 
-bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+  if(keycode == TOMAC){
+    if(pressed){
+      #ifdef MAC_SOUND
+      stop_all_notes();
+      PLAY_SONG(mac_song);
+      #endif
+      winmodeactive = false;
+      set_windows_mode_pref(winmodeactive);
+    }
+    return false;
+  }
 
-  if(winmodeactive)
-    process_winmode_key(keycode, record -> event.pressed);  
-
-  process_special_case_key(keycode, record -> event.pressed);
-  
   return true;
-};
+}
 
-void process_special_case_key(uint16_t keycode, bool pressed){
+bool process_special_case_key(uint16_t keycode, bool pressed){
 
   // Scrolling is 'natural' by default, reverse for windows
   if(keycode == KC_WH_D){
@@ -70,6 +87,7 @@ void process_special_case_key(uint16_t keycode, bool pressed){
       unregister_code(KC_WH_D);
       unregister_code(KC_WH_U);
     }
+    return false;
   }
   if(keycode == KC_WH_U){
     if(pressed){
@@ -84,6 +102,7 @@ void process_special_case_key(uint16_t keycode, bool pressed){
       unregister_code(KC_WH_D);
       unregister_code(KC_WH_U);
     }
+    return false;
   }
 
   // Handle shifted overrides
@@ -91,42 +110,34 @@ void process_special_case_key(uint16_t keycode, bool pressed){
   if(keycode == KC_PSLS){
     if(pressed){
       if(shifted)
-        register_code(KC_PSLS);
+        register_code(KC_BSLS); // Shifted pad forward slash turns into backslash
       else
-        register_code(KC_BSLS);
+        register_code(KC_PSLS);
     }
     else{
       unregister_code(KC_PSLS);
       unregister_code(KC_BSLS);
     }
+    return false;
   }
 
-  // Handle winmode
-  if(keycode == TOWIN){
+if(keycode == FNENT){
     if(pressed){
-      #ifdef MAC_SOUND
-      stop_all_notes();
-      PLAY_SONG(win_song);
-      #endif
-      
-      winmodeactive = true;
-      set_windows_mode_pref(winmodeactive);
+      if(winmodeactive)
+        // Send rename if Windows sends Fn Enter
+        SEND_STRING(SS_TAP(X_F2));
+      else
+        register_code(KC_ENT);
     }
+    else
+      unregister_code(KC_ENT);
+    return false;
   }
-  if(keycode == TOMAC){
-    if(pressed){
-      #ifdef MAC_SOUND
-      stop_all_notes();
-      PLAY_SONG(mac_song);
-      #endif
-      
-      winmodeactive = false;
-      set_windows_mode_pref(winmodeactive);
-    }
-  }
+
+  return true;
 }
 
-void process_winmode_key(uint16_t keycode, bool pressed){
+bool process_winmode_key(uint16_t keycode, bool pressed){
 
   if(keycode == KC_LCMD){
     wincmdpressed = pressed;
@@ -141,6 +152,7 @@ void process_winmode_key(uint16_t keycode, bool pressed){
         wintaskswitcheropen = false;
       }
     }
+    return false;
   }
 
   if(keycode == KC_LALT){
@@ -151,6 +163,7 @@ void process_winmode_key(uint16_t keycode, bool pressed){
     } 
     else
       unregister_code(KC_LALT);
+    return false;
   }
 
   if(keycode == KC_TAB){
@@ -165,9 +178,9 @@ void process_winmode_key(uint16_t keycode, bool pressed){
       // Tab in all cases
       register_code(KC_TAB);
     }
-    else{
+    else
       unregister_code(KC_TAB);
-    }
+    return false;
   }
 
   if(keycode == KC_LEFT){
@@ -185,14 +198,12 @@ void process_winmode_key(uint16_t keycode, bool pressed){
         register_code(KC_LALT);
         SEND_STRING(SS_TAP(BLANK));
       }
-      else{
-        // Regular Arrow
+      else
         register_code(KC_LEFT);
-      }
     }
-    else{
+    else
       unregister_code(KC_LEFT);
-    }
+    return false;
   }
 
   if(keycode == KC_RIGHT){
@@ -210,14 +221,12 @@ void process_winmode_key(uint16_t keycode, bool pressed){
         register_code(KC_LALT);
         SEND_STRING(SS_TAP(BLANK));
       }
-      else{
-        // Regular Arrow
+      else
         register_code(KC_RIGHT);
-      }
     }
-    else{
+    else
       unregister_code(KC_RIGHT);
-    }
+    return false;
   }
 
   if(keycode == KC_BSPC){
@@ -228,14 +237,12 @@ void process_winmode_key(uint16_t keycode, bool pressed){
         SEND_STRING(SS_TAP(X_DEL));
         register_code(KC_RCTL);
       }
-      else{
-        // Regular Backspace
+      else
         register_code(KC_BSPC);
-      }
     }
-    else{
+    else
       unregister_code(KC_BSPC);
-    }
+    return false;
   }
 
   if(keycode == KC_SPC){
@@ -248,10 +255,8 @@ void process_winmode_key(uint16_t keycode, bool pressed){
         // Hold Win key instead. Tapping this key brings up the windows start menu, similar to spotlight search on mac.
         SEND_STRING(SS_DOWN(X_LWIN));
       }
-      else{
-        // Regular Space
-        register_code(KC_SPC);  
-      }
+      else
+        register_code(KC_SPC);
     }
     else{
 
@@ -260,21 +265,29 @@ void process_winmode_key(uint16_t keycode, bool pressed){
 
       unregister_code(KC_SPC);
     }
+    return false;
   }
 
-  if(keycode == KC_ENT){
-    if(pressed){
-      if(IS_LAYER_ON(FnLayer)){
-        // Send rename if Windows sends Fn Enter
-        SEND_STRING(SS_TAP(X_F2));
-      }
-      else{
-        // Regular Enter
-        register_code(KC_ENT);
-      }
-    }
-    else{
-      unregister_code(KC_ENT);
-    }
-  }
+  return true;
+}
+
+bool process_record_user_maclike(uint16_t keycode, keyrecord_t *record) {
+
+  if(winmodeactive && !process_winmode_key(keycode, record -> event.pressed))
+    return false;
+
+  if(!process_special_case_key(keycode, record -> event.pressed))
+    return false;
+  
+  if(!process_toggle_winmode(keycode, record -> event.pressed))
+    return false;
+
+  return true;
+};
+
+// This can be overridden in a keymap, in which case be sure to include a call to process_record_user_maclike
+__attribute__ ((weak)) bool process_record_user(uint16_t keycode, keyrecord_t *record){
+  if(!process_record_user_maclike(keycode, record))
+    return false;
+  return true;
 }

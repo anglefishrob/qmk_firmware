@@ -1,7 +1,7 @@
 // Shared maclike functionality
 
-// Don't forget to add TAP_DANCE_ENABLE=yes to rules.mk
-
+#ifndef USERSPACE
+#define USERSPACE
 
 #pragma once
 
@@ -9,13 +9,7 @@
 #include "quantum.h"
 
 typedef enum{
-  WINCMD = (SAFE_RANGE),
-  WINSPC,
-  WINALT,
-  WINTAB,
-  WINLEFT,
-  WINRIGHT,
-  WINBKSP,
+  FNENT = (SAFE_RANGE),
   TOWIN,
   TOMAC
 }custom_keycodes;
@@ -24,8 +18,10 @@ typedef enum{
   TD_COLQUOT = 0
 }tapdancees;
 
-qk_tap_dance_action_t tap_dance_actions[] = {
+__attribute__ ((weak)) qk_tap_dance_action_t tap_dance_actions[] = {
   [TD_COLQUOT] = ACTION_TAP_DANCE_DOUBLE(KC_SCLN, KC_QUOT)
 };
 
 #define COLQUOT TD(TD_COLQUOT)
+
+#endif
