@@ -1,3 +1,8 @@
+// Shared maclike functionality
+
+// Don't forget to add TAP_DANCE_ENABLE=yes to rules.mk
+
+
 #pragma once
 
 #include QMK_KEYBOARD_H
