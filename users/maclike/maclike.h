@@ -9,9 +9,12 @@
 #include "quantum.h"
 
 typedef enum{
-  FNENT = (SAFE_RANGE),
-  TOWIN,
-  TOMAC
+  MACLIKE_KEYCODES_FIRST = (SAFE_RANGE),
+  FNENT,      // Enter in the Fn layer, used for sending rename on windows and mac
+  SLASHES,    // '/' or '\' if right shift is held
+  TOWIN,      // Turn on windows mode
+  TOMAC,      // Turn off windows mode
+  MACLIKE_KEYCODES_LAST
 }custom_keycodes;
 
 typedef enum{
@@ -23,5 +26,11 @@ __attribute__ ((weak)) qk_tap_dance_action_t tap_dance_actions[] = {
 };
 
 #define COLQUOT TD(TD_COLQUOT)
+
+#define MACBRID KC_F14
+#define MACBRIU KC_F15
+
+#define LSTHAN S(KC_COMM)
+#define GRTHAN S(KC_DOT)
 
 #endif

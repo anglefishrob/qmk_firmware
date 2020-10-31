@@ -3,10 +3,12 @@
 #include "quantum.h"
 #include "maclike.h"
 
+#ifdef AUDIO_ENABLE
 #define MAC_SOUND E__NOTE(_FS5), E__NOTE(_AS5), S__NOTE(_REST), Q__NOTE(_CS6), Q__NOTE(_FS6),
 //#define WIN_SOUND E__NOTE(_FS3), E__NOTE(_AS3), S__NOTE(_REST), Q__NOTE(_CS4), Q__NOTE(_FS4),
 float mac_song[][2] = SONG(MAC_SOUND);
 float win_song[][2] = SONG(QWERTY_SOUND);
+#endif
 
 // In most apps on Windows, tapping Alt focuses the menu bar
 // Using the WinAlt and WinLeft/WinRight buttons logically sends an Alt tap
@@ -73,15 +75,13 @@ bool process_toggle_winmode(uint16_t keycode, bool pressed){
 
 bool process_special_case_key(uint16_t keycode, bool pressed){
 
-  // Scrolling is 'natural' by default, reverse for windows
+  // Scrolling for mac needs to be reversed
   if(keycode == KC_WH_D){
     if(pressed){
-      if(winmodeactive){
+      if(winmodeactive)
+        register_code(KC_WH_D);
+      else
         register_code(KC_WH_U);
-      }
-      else{
-        unregister_code(KC_WH_D);
-      }
     }
     else{
       unregister_code(KC_WH_D);
@@ -91,12 +91,10 @@ bool process_special_case_key(uint16_t keycode, bool pressed){
   }
   if(keycode == KC_WH_U){
     if(pressed){
-      if(winmodeactive){
+      if(winmodeactive)
+        register_code(KC_WH_U);
+      else
         register_code(KC_WH_D);
-      }
-      else{
-        unregister_code(KC_WH_U);
-      }
     }
     else{
       unregister_code(KC_WH_D);
@@ -106,11 +104,15 @@ bool process_special_case_key(uint16_t keycode, bool pressed){
   }
 
   // Handle shifted overrides
-  bool shifted = get_mods() & MOD_BIT(KC_LSHIFT) || get_mods() & MOD_BIT(KC_RSHIFT);
-  if(keycode == KC_PSLS){
+  //bool leftshifted = get_mods() & MOD_BIT(KC_LSHIFT);
+  bool rightshifted = get_mods() & MOD_BIT(KC_RSHIFT);
+  if(keycode == SLASHES){
     if(pressed){
-      if(shifted)
-        register_code(KC_BSLS); // Shifted pad forward slash turns into backslash
+      if(rightshifted){
+        unregister_code(KC_RSHIFT);
+        SEND_STRING("\\"); // Right-Shifted pad forward slash turns into backslash
+        register_code(KC_RSHIFT);
+      }
       else
         register_code(KC_PSLS);
     }
