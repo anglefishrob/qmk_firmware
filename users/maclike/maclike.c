@@ -4,10 +4,13 @@
 #include "maclike.h"
 
 #ifdef AUDIO_ENABLE
-#define MAC_SOUND E__NOTE(_FS5), E__NOTE(_AS5), S__NOTE(_REST), Q__NOTE(_CS6), Q__NOTE(_FS6),
-//#define WIN_SOUND E__NOTE(_FS3), E__NOTE(_AS3), S__NOTE(_REST), Q__NOTE(_CS4), Q__NOTE(_FS4),
+// Mac chord 
+#define MAC_SOUND E__NOTE(_FS4), E__NOTE(_AS4), Q__NOTE(_CS5), W__NOTE(_FS5),
 float mac_song[][2] = SONG(MAC_SOUND);
-float win_song[][2] = SONG(QWERTY_SOUND);
+
+// XP Startup
+#define WIN_SOUND W__NOTE(_DS5), S__NOTE(_DS4), H__NOTE(_AS4), H__NOTE(_GS4), H__NOTE(_DS4), H__NOTE(_DS5), H__NOTE(_AS4)
+float win_song[][2] = SONG(WIN_SOUND);
 #endif
 
 // In most apps on Windows, tapping Alt focuses the menu bar
@@ -37,6 +40,20 @@ void keyboard_post_init_user(void) {
 
   // Set initial value
   winmodeactive = user_config.windows_mode_pref;
+
+  // Play startup sound based on winmode
+  if(winmodeactive){
+      #ifdef MAC_SOUND
+      stop_all_notes();
+      PLAY_SONG(win_song);
+      #endif
+  }
+  else{
+      #ifdef MAC_SOUND
+      stop_all_notes();
+      PLAY_SONG(mac_song);
+      #endif
+  }
 }
 
 void set_windows_mode_pref(bool enabled){
@@ -73,6 +90,40 @@ bool process_toggle_winmode(uint16_t keycode, bool pressed){
   return true;
 }
 
+void handle_shifted_override(bool pressed, uint16_t unshiftedkey, uint16_t shiftedkey, bool isusansishiftedcode){
+
+  bool leftshifted = get_mods() & MOD_BIT(KC_LSHIFT);
+  bool rightshifted = get_mods() & MOD_BIT(KC_RSHIFT);
+  bool anyshifted = leftshifted || rightshifted;
+  
+  // US ANSI shifted codes are just shorthand for LSFT(kc), don't toggle the shift keys
+  leftshifted &= !isusansishiftedcode;
+  rightshifted &= !isusansishiftedcode;
+
+  if(pressed){
+    if(anyshifted){
+      if(leftshifted)
+        unregister_code(KC_LSHIFT);  
+      if(rightshifted)
+        unregister_code(KC_RSHIFT);
+      
+      register_code(shiftedkey);
+      unregister_code(shiftedkey);
+      
+      if(leftshifted)
+        register_code(KC_LSHIFT);  
+      if(rightshifted)
+        register_code(KC_RSHIFT);
+    }
+    else
+      register_code(unshiftedkey);
+  }
+  else{
+    unregister_code(unshiftedkey);
+    unregister_code(shiftedkey);
+  }
+}
+
 bool process_special_case_key(uint16_t keycode, bool pressed){
 
   // Scrolling for mac needs to be reversed
@@ -86,7 +137,7 @@ bool process_special_case_key(uint16_t keycode, bool pressed){
     else{
       unregister_code(KC_WH_D);
       unregister_code(KC_WH_U);
-    }
+    }  
     return false;
   }
   if(keycode == KC_WH_U){
@@ -103,27 +154,22 @@ bool process_special_case_key(uint16_t keycode, bool pressed){
     return false;
   }
 
-  // Handle shifted overrides
-  //bool leftshifted = get_mods() & MOD_BIT(KC_LSHIFT);
-  bool rightshifted = get_mods() & MOD_BIT(KC_RSHIFT);
-  if(keycode == SLASHES){
-    if(pressed){
-      if(rightshifted){
-        unregister_code(KC_RSHIFT);
-        SEND_STRING("\\"); // Right-Shifted pad forward slash turns into backslash
-        register_code(KC_RSHIFT);
-      }
-      else
-        register_code(KC_PSLS);
-    }
-    else{
-      unregister_code(KC_PSLS);
-      unregister_code(KC_BSLS);
-    }
+  if(keycode == COMMEX){
+    handle_shifted_override(pressed, KC_COMM, KC_EXLM, true);
     return false;
   }
 
-if(keycode == FNENT){
+  if(keycode == DOTQUES){
+    handle_shifted_override(pressed, KC_DOT, KC_QUES, true);
+    return false;
+  }
+
+  if(keycode == SLASHES){
+    handle_shifted_override(pressed, KC_PSLS, KC_BSLS, false);
+    return false;
+  }
+
+  if(keycode == FNENT){
     if(pressed){
       if(winmodeactive)
         // Send rename if Windows sends Fn Enter
@@ -141,7 +187,7 @@ if(keycode == FNENT){
 
 bool process_winmode_key(uint16_t keycode, bool pressed){
 
-  if(keycode == KC_LCMD){
+  if(keycode == KC_LCMD || keycode == KC_RCMD){
     wincmdpressed = pressed;
     if (pressed)
       register_code(KC_RCTL);
@@ -234,16 +280,20 @@ bool process_winmode_key(uint16_t keycode, bool pressed){
   if(keycode == KC_BSPC){
     if(pressed){
       if(wincmdpressed == true){
-        // Send a single Delete instead of Ctrl+Backspace
         unregister_code(KC_RCTL);
-        SEND_STRING(SS_TAP(X_DEL));
+        
+        // Register Delete
+        register_code(KC_DEL);
+
         register_code(KC_RCTL);
       }
       else
         register_code(KC_BSPC);
     }
-    else
+    else{
       unregister_code(KC_BSPC);
+      unregister_code(KC_DEL);
+    }
     return false;
   }
 

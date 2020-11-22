@@ -11,7 +11,9 @@
 typedef enum{
   MACLIKE_KEYCODES_FIRST = (SAFE_RANGE),
   FNENT,      // Enter in the Fn layer, used for sending rename on windows and mac
-  SLASHES,    // '/' or '\' if right shift is held
+  SLASHES,    // '/' or '\' shifted
+  DOTQUES,    // '.' or '?' shifted
+  COMMEX,     // ',' or '!' shifted
   TOWIN,      // Turn on windows mode
   TOMAC,      // Turn off windows mode
   MACLIKE_KEYCODES_LAST
@@ -29,8 +31,5 @@ __attribute__ ((weak)) qk_tap_dance_action_t tap_dance_actions[] = {
 
 #define MACBRID KC_F14
 #define MACBRIU KC_F15
-
-#define LSTHAN S(KC_COMM)
-#define GRTHAN S(KC_DOT)
 
 #endif

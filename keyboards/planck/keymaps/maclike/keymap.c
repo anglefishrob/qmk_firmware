@@ -32,8 +32,6 @@ enum planck_layers {
 #define RAISE MO(NumpadLayer)
 #define RAISE1 MO(Fn1Layer)
 #define ESC_FN LT(FnLayer, KC_ESC)
-#define LSTHAN S(KC_COMM)
-#define GRTHAN S(KC_DOT)
 
 //=============================//
 //                             //
@@ -49,9 +47,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * ,-----------------------------------------------------------------------------------.
  * | Tab  |   Q  |   W  |   E  |   R  |   T  |   Y  |   U  |   I  |   O  |   P  | Bksp |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
- * | Esc  |   A  |   S  |   D  |   F  |   G  |   H  |   J  |   K  |   L  |  ;t' |Enter |
+ * | Esc  |   A  |   S  |   D  |   F  |   G  |   H  |   J  |   K  |   L  |  ;' |Enter |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
- * | Shift|   Z  |   X  |   C  |   V  |   B  |   N  |   M  |   ,  |   .  |  Up  |Shift |
+ * | Shift|   Z  |   X  |   C  |   V  |   B  |   N  |   M  |  ,!  |  .?  |  Up  |Shift |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
  * | Ctrl | Alt  | CMD  |      |RAISE |    Space    |RAISE | Cmd  | Left | Down |Right |
  * `-----------------------------------------------------------------------------------'
@@ -59,25 +57,25 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 [DefaultLayer] = LAYOUT_planck_grid(
     KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_BSPC,
     ESC_FN,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    COLQUOT, KC_ENT,
-    KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_UP,   KC_RSFT,
-    KC_LCTL, KC_LALT, KC_LCMD, XXXXXXX, RAISE,   KC_SPC,  KC_SPC,  RAISE,   KC_RCMD, KC_LEFT, KC_DOWN, KC_RGHT
+    KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    COMMEX,  DOTQUES, KC_UP,   KC_RSFT,
+    KC_LCTL, KC_LALT, KC_LCMD, XXXXXXX, RAISE,   KC_SPC,  KC_SPC,  RAISE,   XXXXXXX, KC_LEFT, KC_DOWN, KC_RGHT
 ),
 
 /* Numpad and Symbols
  * ,-----------------------------------------------------------------------------------.
- * |  `   |   1  |   2  |   3  |   4  |   !  |   |  |   (  |   )  |   -  |   +  | [v]  |
+ * |  -   |   1  |   2  |   3  |   4  |   (  |   )  |   _  |   -  |   +  |   =  | [v]  |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
- * | [v]  |   4  |   5  |   6  |      |   ?  |   &  |   {  |   }  |  /s\ |   *  |  =   |
+ * | [v]  |   4  |   5  |   6  |   .  |   {  |   }  |   |  |   /  |   *  |   =  | [v]  |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
- * | [v]  |   7  |   8  |   9  |   0  |   <  |   >  |   [  |   ]  |   .  | [v]  | [v]  |
+ * | [v]  |   7  |   8  |   9  |   0  |   [  |   ]  |   &  |   <  |   >  | [v]  | [v]  |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
  * | [v]  | [v]  | [v]  | [v]  | Fn1  |     [v]     | Fn1  | [v]  | [v]  | [v]  | [v]  |
  * `-----------------------------------------------------------------------------------'
  */
 [NumpadLayer] = LAYOUT_planck_grid(
-    KC_GRV,  KC_1,    KC_2,    KC_3,    KC_4,    KC_EXLM, KC_PIPE, KC_LPRN, KC_RPRN, KC_MINS, KC_PPLS, _______,
-    _______, KC_4,    KC_5,    KC_6,    XXXXXXX, KC_QUES, KC_AMPR, KC_LCBR, KC_RCBR, SLASHES, KC_PAST, KC_EQL,
-    _______, KC_7,    KC_8,    KC_9,    KC_0,    LSTHAN,  GRTHAN,  KC_LBRC, KC_RBRC, _______, _______, _______,
+    KC_MINS, KC_1,    KC_2,    KC_3,    KC_4,    KC_LPRN, KC_RPRN, KC_UNDS, KC_MINS, KC_PPLS, KC_EQL,  _______,
+    _______, KC_4,    KC_5,    KC_6,    KC_DOT,  KC_LCBR, KC_RCBR, KC_PIPE, SLASHES, KC_PAST, KC_EQL,  _______,
+    _______, KC_7,    KC_8,    KC_9,    KC_0,    KC_LBRC, KC_RBRC, KC_AMPR, KC_LT,   KC_GT,   _______, _______,
     _______, _______, _______, _______, RAISE1,  _______, _______, RAISE1,  _______, _______, _______, _______
 ),
 

@@ -12,10 +12,17 @@
 
 #define MIDI_BASIC
 
-#define PERMISSIVE_HOLD
-
-#define TAPPING_TERM 200
-
 #define AUDIO_CLICKY
 
 #define DAC_SAMPLE_MAX 30000U//65535U
+
+// With this combination of tap & hold settings:
+// Holding a specified key and touching another key will always do the held key.
+// It is meant to be as responsive as a shift or other modifier.
+// Tapping the key alone will always be the tap key.
+// Don't forget to implement get_tapping_term
+#define PERMISSIVE_HOLD
+#define TAPPING_TERM 200
+#define RETRO_TAPPING
+#define TAPPING_TERM_PER_KEY
+#define HOLDING_TERM 1
