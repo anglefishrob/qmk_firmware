@@ -323,15 +323,81 @@ bool process_winmode_key(uint16_t keycode, bool pressed){
   return true;
 }
 
+bool spaceraisetapready = false;
+bool spaceqmktapready = false;
+bool escfntapready = false;
+
+bool process_instant_layer_tap(uint16_t keycode, bool pressed){
+  
+  if(keycode == SPC_RSE){
+    if(pressed){
+      spaceraisetapready = true;
+      layer_on(RaiseLayer);
+    }
+    else{
+      layer_off(RaiseLayer);
+      if(spaceraisetapready){
+        register_code(KC_SPC);
+        unregister_code(KC_SPC);
+      }
+    }
+    return false;
+  }
+
+  if(keycode == SPC_QMK){
+    if(pressed){
+      spaceqmktapready = true;
+      layer_on(QMKLayer);
+    }
+    else{
+      layer_off(QMKLayer);
+      if(spaceqmktapready){
+        register_code(KC_SPC);
+        unregister_code(KC_SPC);
+      }
+    }
+    return false;
+  }
+
+  if(keycode == ESC_FN){
+    if(pressed){
+      escfntapready = true;
+      layer_on(FnLayer);
+    }
+    else{
+      layer_off(FnLayer);
+      if(escfntapready){
+        register_code(KC_ESC);
+        unregister_code(KC_ESC);
+      }
+    }
+    return false;
+  }
+
+  return true;
+}
+
 bool process_record_user_maclike(uint16_t keycode, keyrecord_t *record) {
 
-  if(winmodeactive && !process_winmode_key(keycode, record -> event.pressed))
+  bool pressed = record -> event.pressed;
+
+  if(pressed){
+     // On any button DOWN, invalidate all instant taps
+    spaceraisetapready = false;
+    spaceqmktapready = false;
+    escfntapready = false;
+  }
+
+  if(!process_instant_layer_tap(keycode, pressed))
     return false;
 
-  if(!process_special_case_key(keycode, record -> event.pressed))
+  if(winmodeactive && !process_winmode_key(keycode, pressed))
+    return false;
+
+  if(!process_special_case_key(keycode, pressed))
     return false;
   
-  if(!process_toggle_winmode(keycode, record -> event.pressed))
+  if(!process_toggle_winmode(keycode, pressed))
     return false;
 
   return true;

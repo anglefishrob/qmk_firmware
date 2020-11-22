@@ -6,32 +6,8 @@
 #include "quantum.h"
 #include "maclike.h"
 
-
-enum planck_layers {
-  DefaultLayer,
-  RaiseLayer,
-  FnLayer,
-  QMKLayer,
-};
-
 #define RAISE MO(RaiseLayer)
-#define SPRAISE LT(RaiseLayer, KC_SPC)
-
-#define ESCFN LT(FnLayer, KC_ESC)
-
 #define QMK MO(QMKLayer)
-#define SPQMK LT(QMKLayer, KC_SPC)
-
-uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
-    switch (keycode) {
-        case LT(RaiseLayer, KC_SPC):
-        case LT(FnLayer, KC_ESC):
-        case LT(QMKLayer, KC_SPC):
-            return HOLDING_TERM;
-        default:
-            return TAPPING_TERM;
-    }
-}
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
@@ -51,9 +27,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 [DefaultLayer] = LAYOUT_preonic_grid(
     KC_GRV,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_DEL,
     KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_BSPC,
-    ESCFN,   KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    COLQUOT, KC_ENT,
+    ESC_FN,   KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    COLQUOT, KC_ENT,
     KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    COMMEX,  DOTQUES, KC_UP,   KC_RSFT,
-    KC_LCTL, KC_LALT, KC_LCMD, RAISE,   KC_SPC,  KC_SPC,  SPRAISE, SPRAISE, KC_RCMD, KC_LEFT, KC_DOWN, KC_RGHT
+    KC_LCTL, KC_LALT, KC_LCMD, RAISE,   KC_SPC,  KC_SPC,  SPC_RSE, SPC_RSE, KC_RCMD, KC_LEFT, KC_DOWN, KC_RGHT
 ),
 
 /* Numpad and Symbols
@@ -74,7 +50,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_MINS, KC_1,    KC_2,    KC_3,    KC_4,    KC_LPRN, KC_RPRN, KC_UNDS, KC_MINS, KC_PPLS, KC_EQL,  _______,
     _______, KC_4,    KC_5,    KC_6,    KC_DOT,  KC_LCBR, KC_RCBR, KC_PIPE, SLASHES, KC_PAST, KC_EQL,  _______,
     _______, KC_7,    KC_8,    KC_9,    KC_0,    KC_LBRC, KC_RBRC, KC_AMPR, KC_LT,   KC_GT,   _______, _______,
-    _______, _______, _______, QMK,     SPQMK,   SPQMK,   SPQMK,   SPQMK,   QMK,     _______, _______, _______
+    _______, _______, _______, QMK,     SPC_QMK, SPC_QMK, SPC_QMK, SPC_QMK, QMK,     _______, _______, _______
 ),
 
 /* Fn

@@ -16,6 +16,9 @@ typedef enum{
   COMMEX,     // ',' or '!' shifted
   TOWIN,      // Turn on windows mode
   TOMAC,      // Turn off windows mode
+  SPC_RSE,
+  SPC_QMK,
+  ESC_FN,
   MACLIKE_KEYCODES_LAST
 }custom_keycodes;
 
@@ -31,5 +34,12 @@ __attribute__ ((weak)) qk_tap_dance_action_t tap_dance_actions[] = {
 
 #define MACBRID KC_F14
 #define MACBRIU KC_F15
+
+enum planck_layers {
+  DefaultLayer,
+  RaiseLayer,
+  FnLayer,
+  QMKLayer,
+};
 
 #endif
